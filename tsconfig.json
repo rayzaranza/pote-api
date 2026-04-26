@@ -8,7 +8,15 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "noUnusedLocals": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "sourceMap": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedParameters": true,
+    "lib": [ "es2022" ]
   },
   "include": [ "src/**/*" ],
   "exclude": [ "node_modules", "dist" ]
