@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "migrate:create": "node-pg-migrate create -m src/database/migrations -j sql",
+    "migrate:up": "node-pg-migrate up -m src/database/migrations -j sql",
+    "migrate:down": "node-pg-migrate down -m src/database/migrations -j sql",
     "build": "tsc",
     "start": "node dist/server.js"
   },
