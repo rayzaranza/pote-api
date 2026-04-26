@@ -1,12 +1,16 @@
-import { app } from "./app";
+import { app } from "./app.js";
+import { pool } from "./database/pool.js";
 
-async function server() {
-  try {
-    await app.listen({ port: 3000 });
-  } catch (error) {
+app.listen({ port: 3000, host: "0.0.0.0" }, (error, address) => {
+  if (error) {
     app.log.error(error);
     process.exit(1);
   }
-}
+  console.log(`API rodando  em ${address}`);
+});
 
-server();
+process.on("SIGTERM", async () => {
+  await pool.end();
+  await app.close();
+  process.exit(0);
+});
