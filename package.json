@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "migrate:create": "node-pg-migrate create -m src/database/migrations -j sql",
+    "migrate:up": "node-pg-migrate up -m src/database/migrations -j sql",
+    "migrate:down": "node-pg-migrate down -m src/database/migrations -j sql",
     "build": "tsc",
     "start": "node dist/server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ray Zaranza",
   "license": "ISC",
   "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8",
   "dependencies": {
@@ -19,6 +23,8 @@
   "devDependencies": {
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
+    "dotenv": "^17.4.2",
+    "node-pg-migrate": "^8.0.4",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   },
