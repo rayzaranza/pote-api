@@ -1,13 +1,18 @@
 import { app } from "./app.js";
 import { pool } from "./database/pool.js";
+import dotenv from "dotenv";
 
-app.listen({ port: 3000, host: "0.0.0.0" }, (error, address) => {
+dotenv.config();
+
+app.listen(
+  { port: Number(process.env.PORT) || 3000, host: "0.0.0.0" },
+  (error) => {
   if (error) {
     app.log.error(error);
     process.exit(1);
   }
-  console.log(`API rodando  em ${address}`);
-});
+  },
+);
 
 process.on("SIGTERM", async () => {
   await pool.end();
