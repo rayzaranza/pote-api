@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/server.ts | pino-pretty",
     "migrate:create": "node-pg-migrate create -m src/database/migrations -j sql",
     "migrate:up": "node-pg-migrate up -m src/database/migrations -j sql",
     "migrate:down": "node-pg-migrate down -m src/database/migrations -j sql",
