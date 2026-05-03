@@ -1,5 +1,5 @@
 import { pool } from "../database/pool.js";
-import { AppError } from "../lib/errors.js";
+import { AppError, NotFoundError } from "../lib/errors.js";
 import type { PublicAsset, AssetInsert } from "../types/assets.js";
 
 export async function getAssets(userId: string, collectionId?: string) {
@@ -26,6 +26,41 @@ export async function getAssets(userId: string, collectionId?: string) {
 
     return {
       assets: rows.map((row) => ({ ...row, size: Number(row.size) })),
+    };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao retornar arquivos.", 500);
+  }
+}
+
+export async function getAssetById(assetId: string, userId: string) {
+  try {
+    const { rows } = await pool.query<PublicAsset>(
+      `SELECT 
+          id,
+          name, 
+          description, 
+          url, 
+          type, 
+          mime_type, 
+          size, 
+          width, 
+          height, 
+          created_at,
+          updated_at,
+          collection_id
+        FROM assets
+        WHERE id = $1 AND user_id = $2`,
+      [assetId, userId],
+    );
+
+    const asset = rows[0];
+    if (!asset) {
+      throw new NotFoundError("Nenhum arquivo encontrado com esse id.");
+    }
+
+    return {
+      asset: { ...asset, size: Number(asset.size) },
     };
   } catch (error) {
     if (error instanceof AppError) throw error;

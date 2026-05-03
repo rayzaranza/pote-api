@@ -41,3 +41,5 @@ export interface AssetUploadBody {
   description?: string;
   collection_id?: string;
 }
+
+export const AssetByIdSchema = z.object({ assetId: z.uuid() });
