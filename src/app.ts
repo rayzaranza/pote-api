@@ -6,6 +6,7 @@ import {
   validatorCompiler,
 } from "@fastify/type-provider-zod";
 import multipart from "@fastify/multipart";
+import { ZodError } from "zod";
 
 export const app = Fastify({ logger: true });
 
@@ -21,10 +22,18 @@ app.setErrorHandler((error: FastifyError, _request, reply) => {
       .send({ error: error.message, code: error.statusCode });
   }
 
+  if (error instanceof ZodError) {
+    return reply.status(400).send({
+      error: "Erro de validação",
+      ...(process.env.NODE_ENV !== "production" && {
+        details: error.issues,
+      }),
+    });
+  }
+
   if (error.validation) {
     return reply.status(400).send({
       error: "Erro de validação",
-      message: error.message,
       ...(process.env.NODE_ENV !== "production" && {
         details: error.validation,
       }),
