@@ -7,8 +7,6 @@ export async function createCollection({
   description,
   userId,
 }: CollectionInsert) {
-  let collection: Collection | undefined;
-
   try {
     const { rows } = await pool.query<Collection>(
       `INSERT INTO collections (name, description, user_id) 
@@ -16,13 +14,17 @@ export async function createCollection({
       RETURNING id, name, description, created_at, updated_at;`,
       [name, description, userId],
     );
-    collection = rows[0];
+
+    if (!rows[0]) {
+      throw new AppError("Erro interno ao criar coleção.", 500);
+    }
+
+    return { collection: rows[0] };
   } catch (error) {
+    if (error instanceof AppError) throw error;
     throw new AppError("Erro interno ao criar coleção.", 500);
   }
-
-  if (!collection) {
-    throw new AppError("Erro interno ao criar coleção.", 500);
+}
   }
 
   return { collection };
