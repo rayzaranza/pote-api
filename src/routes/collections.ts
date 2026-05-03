@@ -4,6 +4,7 @@ import {
   getCollections,
   getCollectionById,
   editCollection,
+  deleteCollection,
 } from "../services/collections.js";
 import { ZodTypeProvider } from "@fastify/type-provider-zod";
 import {
@@ -59,6 +60,17 @@ export async function collectionRoutes(app: FastifyInstance) {
         collectionId,
       );
       reply.send({ collection });
+    },
+  );
+
+  server.delete(
+    "/:collectionId",
+    { schema: { params: CollectionByIdSchema } },
+    async (request, reply) => {
+      const { collectionId } = request.params;
+      const { userId } = request.user;
+      await deleteCollection(collectionId, userId);
+      reply.code(204).send();
     },
   );
 }

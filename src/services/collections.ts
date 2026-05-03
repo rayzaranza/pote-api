@@ -95,3 +95,20 @@ export async function editCollection(
     throw new AppError("Erro interno ao editar coleção.", 500);
   }
 }
+
+export async function deleteCollection(collectionId: string, userId: string) {
+  try {
+    const { rowCount } = await pool.query<PublicCollection>(
+      `DELETE FROM collections
+       WHERE id = $1 AND user_id = $2;`,
+      [collectionId, userId],
+    );
+
+    if (rowCount === 0) {
+      throw new NotFoundError("Nenhuma coleção encontrada com esse id.");
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao excluir coleção.", 500);
+  }
+}
