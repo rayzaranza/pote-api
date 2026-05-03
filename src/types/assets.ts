@@ -43,3 +43,12 @@ export interface AssetUploadBody {
 }
 
 export const AssetByIdSchema = z.object({ assetId: z.uuid() });
+
+export const AssetUpdateSchema = z.object({
+  name: z.string().min(2).optional(),
+  description: z.string().nullish(),
+  type: AssetTypeSchema.optional(),
+  collection_id: z.uuid().nullish(),
+});
+
+export type AssetUpdate = z.infer<typeof AssetUpdateSchema>;
