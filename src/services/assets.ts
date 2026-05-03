@@ -191,3 +191,20 @@ export async function editAsset(
     throw new AppError("Erro interno ao editar arquivo.", 500);
   }
 }
+
+export async function deleteAsset(assetId: string, userId: string) {
+  try {
+    const { rowCount } = await pool.query(
+      `DELETE FROM assets 
+       WHERE id = $1 AND user_id = $2;`,
+      [assetId, userId],
+    );
+
+    if (rowCount === 0) {
+      throw new NotFoundError("Nenhum arquivo encontrado com esse id.");
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao excluir arquivo.", 500);
+  }
+}

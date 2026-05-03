@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify/types/instance.js";
 import {
   createAsset,
+  deleteAsset,
   editAsset,
   getAssetById,
   getAssets,
@@ -84,6 +85,17 @@ export async function assetsRoutes(app: FastifyInstance) {
         userId,
       );
       reply.send({ asset });
+    },
+  );
+
+  server.delete(
+    "/:assetId",
+    { schema: { params: AssetByIdSchema } },
+    async (request, reply) => {
+      const { assetId } = request.params;
+      const { userId } = request.user;
+      await deleteAsset(assetId, userId);
+      reply.code(204).send();
     },
   );
 }
