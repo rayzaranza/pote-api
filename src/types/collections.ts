@@ -19,3 +19,5 @@ export const CollectionInsertSchema = z.object({
 export type CollectionInsertBody = z.infer<typeof CollectionInsertSchema>;
 
 export type CollectionInsert = CollectionInsertBody & { userId: string };
+
+export const CollectionByIdSchema = z.object({ collectionId: z.uuid() });

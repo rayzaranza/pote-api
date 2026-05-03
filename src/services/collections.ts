@@ -1,5 +1,5 @@
 import { pool } from "../database/pool.js";
-import { AppError } from "../lib/errors.js";
+import { AppError, NotFoundError } from "../lib/errors.js";
 import type {
   Collection,
   CollectionInsert,
@@ -43,5 +43,25 @@ export async function getCollections(userId: string) {
     return { collections: rows };
   } catch (error) {
     throw new AppError("Erro interno ao listar coleções.", 500);
+  }
+}
+
+export async function getCollectionById(collectionId: string, userId: string) {
+  try {
+    const { rows } = await pool.query<PublicCollection>(
+      `SELECT id, name, description, created_at, updated_at
+       FROM collections
+       WHERE id = $1 AND user_id = $2;`,
+      [collectionId, userId],
+    );
+
+    if (!rows[0]) {
+      throw new NotFoundError("Nenhuma coleção encontrada com esse id.");
+    }
+
+    return { collection: rows[0] };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao retornar coleção.", 500);
   }
 }

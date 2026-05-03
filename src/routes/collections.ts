@@ -1,7 +1,14 @@
 import { type FastifyInstance } from "fastify";
-import { createCollection, getCollections } from "../services/collections.js";
+import {
+  createCollection,
+  getCollections,
+  getCollectionById,
+} from "../services/collections.js";
 import { ZodTypeProvider } from "@fastify/type-provider-zod";
-import { CollectionInsertSchema } from "../types/collections.js";
+import {
+  CollectionByIdSchema,
+  CollectionInsertSchema,
+} from "../types/collections.js";
 
 export async function collectionRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -11,6 +18,17 @@ export async function collectionRoutes(app: FastifyInstance) {
     const { collections } = await getCollections(userId);
     reply.send({ collections });
   });
+
+  server.get(
+    "/:collectionId",
+    { schema: { params: CollectionByIdSchema } },
+    async (request, reply) => {
+      const { userId } = request.user;
+      const { collectionId } = request.params;
+      const { collection } = await getCollectionById(collectionId, userId);
+      reply.send({ collection });
+    },
+  );
 
   server.post(
     "/",
