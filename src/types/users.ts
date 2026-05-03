@@ -19,3 +19,10 @@ export const UserInsertSchema = z.object({
 });
 
 export type UserInsert = z.infer<typeof UserInsertSchema>;
+
+export const UserLoginSchema = z.object({
+  email: z.email(),
+  password: z.string().min(1),
+});
+
+export type UserLogin = z.infer<typeof UserLoginSchema>;
