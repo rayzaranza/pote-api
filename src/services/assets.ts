@@ -2,6 +2,37 @@ import { pool } from "../database/pool.js";
 import { AppError } from "../lib/errors.js";
 import type { PublicAsset, AssetInsert } from "../types/assets.js";
 
+export async function getAssets(userId: string, collectionId?: string) {
+  try {
+    const { rows } = await pool.query<PublicAsset>(
+      `SELECT 
+          id,
+          name, 
+          description, 
+          url, 
+          type, 
+          mime_type, 
+          size, 
+          width, 
+          height, 
+          created_at,
+          updated_at,
+          collection_id
+        FROM assets
+        WHERE user_id = $1 AND ($2::uuid IS NULL OR collection_id = $2)
+        ORDER BY created_at DESC;`,
+      [userId, collectionId ?? null],
+    );
+
+    return {
+      assets: rows.map((row) => ({ ...row, size: Number(row.size) })),
+    };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao retornar arquivos.", 500);
+  }
+}
+
 export async function createAsset(asset: AssetInsert, userId: string) {
   try {
     const { rows } = await pool.query<PublicAsset>(
@@ -48,7 +79,8 @@ export async function createAsset(asset: AssetInsert, userId: string) {
     if (!rows[0]) {
       throw new AppError("Erro interno ao criar arquivo.", 500);
     }
-    return { asset: rows[0] };
+    const data = rows[0];
+    return { asset: { ...data, size: Number(data.size) } };
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError("Erro interno ao criar arquivo.", 500);

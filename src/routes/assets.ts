@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify/types/instance.js";
-import { createAsset } from "../services/assets.js";
+import { createAsset, getAssets } from "../services/assets.js";
 import type { ZodTypeProvider } from "@fastify/type-provider-zod";
 import { ValidationError } from "../lib/errors.js";
 import { AssetInsertSchema, type AssetUploadBody } from "../types/assets.js";
@@ -7,6 +7,11 @@ import { processFile } from "../lib/upload.js";
 
 export async function assetsRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
+
+  server.get("/", async (request, reply) => {
+    const { assets } = await getAssets(request.user.userId);
+    reply.send({ assets });
+  });
 
   server.post("/", async (request, reply) => {
     const { name, file, type, description, collection_id } =
