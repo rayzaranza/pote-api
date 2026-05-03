@@ -5,11 +5,14 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from "@fastify/type-provider-zod";
+import multipart from "@fastify/multipart";
 
 export const app = Fastify({ logger: true });
 
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
+
+app.register(multipart, { attachFieldsToBody: "keyValues" });
 
 app.setErrorHandler((error: FastifyError, _request, reply) => {
   if (error instanceof AppError) {
