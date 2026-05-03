@@ -1,6 +1,11 @@
 import { pool } from "../database/pool.js";
 import { AppError, NotFoundError } from "../lib/errors.js";
-import type { PublicAsset, AssetInsert } from "../types/assets.js";
+import type {
+  PublicAsset,
+  AssetInsert,
+  AssetUpdate,
+  FileData,
+} from "../types/assets.js";
 
 export async function getAssets(userId: string, collectionId?: string) {
   try {
@@ -119,5 +124,70 @@ export async function createAsset(asset: AssetInsert, userId: string) {
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError("Erro interno ao criar arquivo.", 500);
+  }
+}
+
+export async function editAsset(
+  {
+    assetData,
+    fileData,
+  }: { assetData: AssetUpdate; fileData?: FileData | undefined },
+  assetId: string,
+  userId: string,
+) {
+  try {
+    const { rows } = await pool.query(
+      `UPDATE assets
+       SET
+          name = COALESCE($1, name), 
+          description = COALESCE($2, description), 
+          url = COALESCE($3, url), 
+          type = COALESCE($4, type), 
+          mime_type = COALESCE($5, mime_type), 
+          size = COALESCE($6, size),  
+          width = COALESCE($7, width), 
+          height = COALESCE($8, height), 
+          collection_id = COALESCE($9, collection_id),
+          updated_at = now()
+        WHERE
+          id = $10 AND user_id = $11
+        RETURNING 
+          id,
+          name, 
+          description, 
+          url, 
+          type, 
+          mime_type, 
+          size, 
+          width, 
+          height, 
+          created_at,
+          updated_at,
+          collection_id;`,
+      [
+        assetData.name,
+        assetData.description,
+        fileData?.url,
+        assetData.type,
+        fileData?.mime_type,
+        fileData?.size,
+        fileData?.width,
+        fileData?.height,
+        assetData.collection_id,
+        assetId,
+        userId,
+      ],
+    );
+
+    const asset = rows[0];
+
+    if (!asset) {
+      throw new NotFoundError("Nenhum arquivo encontrado com esse id.");
+    }
+
+    return { asset: { ...asset, size: Number(asset.size) } };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao editar arquivo.", 500);
   }
 }

@@ -1,10 +1,17 @@
 import type { FastifyInstance } from "fastify/types/instance.js";
-import { createAsset, getAssetById, getAssets } from "../services/assets.js";
+import {
+  createAsset,
+  editAsset,
+  getAssetById,
+  getAssets,
+} from "../services/assets.js";
 import type { ZodTypeProvider } from "@fastify/type-provider-zod";
 import { ValidationError } from "../lib/errors.js";
 import {
   AssetByIdSchema,
   AssetInsertSchema,
+  AssetUpdateSchema,
+  FileData,
   type AssetUploadBody,
 } from "../types/assets.js";
 import { processFile } from "../lib/upload.js";
@@ -48,4 +55,35 @@ export async function assetsRoutes(app: FastifyInstance) {
 
     reply.code(201).send({ asset });
   });
+
+  server.patch(
+    "/:assetId",
+    { schema: { params: AssetByIdSchema } },
+    async (request, reply) => {
+      const { name, file, type, description, collection_id } =
+        request.body as AssetUploadBody;
+
+      const assetData = AssetUpdateSchema.parse({
+        name,
+        type,
+        description,
+        collection_id,
+      });
+
+      let fileData: FileData | undefined;
+
+      if (file) {
+        fileData = await processFile(file);
+      }
+
+      const { userId } = request.user;
+      const { assetId } = request.params;
+      const { asset } = await editAsset(
+        { assetData, fileData },
+        assetId,
+        userId,
+      );
+      reply.send({ asset });
+    },
+  );
 }
