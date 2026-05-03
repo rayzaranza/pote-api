@@ -12,6 +12,7 @@ import {
   CollectionInsertSchema,
   CollectionUpdateSchema,
 } from "../types/collections.js";
+import { getAssets } from "../services/assets.js";
 
 export async function collectionRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -30,6 +31,17 @@ export async function collectionRoutes(app: FastifyInstance) {
       const { collectionId } = request.params;
       const { collection } = await getCollectionById(collectionId, userId);
       reply.send({ collection });
+    },
+  );
+
+  server.get(
+    "/:collectionId/assets",
+    { schema: { params: CollectionByIdSchema } },
+    async (request, reply) => {
+      const { collectionId } = request.params;
+      const { userId } = request.user;
+      const { assets } = await getAssets(userId, collectionId);
+      reply.send({ assets });
     },
   );
 
