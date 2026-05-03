@@ -3,11 +3,13 @@ import {
   createCollection,
   getCollections,
   getCollectionById,
+  editCollection,
 } from "../services/collections.js";
 import { ZodTypeProvider } from "@fastify/type-provider-zod";
 import {
   CollectionByIdSchema,
   CollectionInsertSchema,
+  CollectionUpdateSchema,
 } from "../types/collections.js";
 
 export async function collectionRoutes(app: FastifyInstance) {
@@ -42,6 +44,21 @@ export async function collectionRoutes(app: FastifyInstance) {
         userId,
       });
       reply.code(201).send({ collection });
+    },
+  );
+
+  server.patch(
+    "/:collectionId",
+    { schema: { params: CollectionByIdSchema, body: CollectionUpdateSchema } },
+    async (request, reply) => {
+      const { userId } = request.user;
+      const { collectionId } = request.params;
+      const { name, description } = request.body;
+      const { collection } = await editCollection(
+        { name, description, userId },
+        collectionId,
+      );
+      reply.send({ collection });
     },
   );
 }

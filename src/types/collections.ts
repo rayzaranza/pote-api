@@ -21,3 +21,19 @@ export type CollectionInsertBody = z.infer<typeof CollectionInsertSchema>;
 export type CollectionInsert = CollectionInsertBody & { userId: string };
 
 export const CollectionByIdSchema = z.object({ collectionId: z.uuid() });
+
+export const CollectionUpdateSchema = z
+  .object({
+    name: z.string().min(2).optional(),
+    description: z.string().nullish(),
+  })
+  .refine(
+    ({ name, description }) => name !== undefined || description !== undefined,
+    {
+      message: "Pelo menos um campo deve ser fornecido.",
+    },
+  );
+
+export type CollectionUpdate = z.infer<typeof CollectionUpdateSchema> & {
+  userId: string;
+};

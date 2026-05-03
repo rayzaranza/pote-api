@@ -3,6 +3,7 @@ import { AppError, NotFoundError } from "../lib/errors.js";
 import type {
   Collection,
   CollectionInsert,
+  CollectionUpdate,
   PublicCollection,
 } from "../types/collections.js";
 
@@ -63,5 +64,34 @@ export async function getCollectionById(collectionId: string, userId: string) {
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError("Erro interno ao retornar coleção.", 500);
+  }
+}
+
+export async function editCollection(
+  { name, description, userId }: CollectionUpdate,
+  collectionId: string,
+) {
+  try {
+    const { rows } = await pool.query<PublicCollection>(
+      `UPDATE collections 
+       SET 
+          name = COALESCE($1, name),
+          description = COALESCE($2, description),
+          updated_at = now()
+       WHERE 
+          id = $3 AND user_id = $4
+       RETURNING 
+          id, name, description, created_at, updated_at;`,
+      [name, description, collectionId, userId],
+    );
+
+    if (!rows[0]) {
+      throw new NotFoundError("Nenhuma coleção encontrada com esse id.");
+    }
+
+    return { collection: rows[0] };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao editar coleção.", 500);
   }
 }
