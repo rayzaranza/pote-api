@@ -1,13 +1,15 @@
 import { type FastifyInstance } from "fastify";
-import { createCollection } from "../services/collections.js";
+import { createCollection, getCollections } from "../services/collections.js";
 import { ZodTypeProvider } from "@fastify/type-provider-zod";
 import { CollectionInsertSchema } from "../types/collections.js";
 
 export async function collectionRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  server.get("/", async (_request, reply) => {
-    reply.send({ eita: "eita" });
+  server.get("/", async (request, reply) => {
+    const { userId } = request.user;
+    const { collections } = await getCollections(userId);
+    reply.send({ collections });
   });
 
   server.post(

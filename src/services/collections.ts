@@ -1,6 +1,10 @@
 import { pool } from "../database/pool.js";
 import { AppError } from "../lib/errors.js";
-import type { Collection, CollectionInsert } from "../types/collections.js";
+import type {
+  Collection,
+  CollectionInsert,
+  PublicCollection,
+} from "../types/collections.js";
 
 export async function createCollection({
   name,
@@ -25,7 +29,19 @@ export async function createCollection({
     throw new AppError("Erro interno ao criar coleção.", 500);
   }
 }
-  }
 
-  return { collection };
+export async function getCollections(userId: string) {
+  try {
+    const { rows } = await pool.query<PublicCollection>(
+      `SELECT id, name, description, created_at, updated_at 
+       FROM collections 
+       WHERE user_id = $1
+       ORDER BY created_at DESC;`,
+      [userId],
+    );
+
+    return { collections: rows };
+  } catch (error) {
+    throw new AppError("Erro interno ao listar coleções.", 500);
+  }
 }
