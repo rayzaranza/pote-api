@@ -13,9 +13,9 @@ import {
   AssetInsertSchema,
   AssetUpdateSchema,
   FileData,
-  type AssetUploadBody,
 } from "../types/assets.js";
 import { processFile } from "../lib/upload.js";
+import { getField } from "../lib/multipart.js";
 
 export async function assetsRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -38,19 +38,17 @@ export async function assetsRoutes(app: FastifyInstance) {
   );
 
   server.post("/", async (request, reply) => {
-    const { name, file, type, description, collection_id } =
-      request.body as AssetUploadBody;
-
-    if (!file) throw new ValidationError("Nenhum arquivo enviado");
+    const data = await request.file();
+    if (!data) throw new ValidationError("Nenhum arquivo enviado.");
 
     const fields = AssetInsertSchema.parse({
-      name,
-      type,
-      description,
-      collection_id,
+      name: getField(data, "name"),
+      type: getField(data, "type"),
+      description: getField(data, "description"),
+      collection_id: getField(data, "collection_id"),
     });
 
-    const fileData = await processFile(file);
+    const fileData = await processFile(data);
     const { userId } = request.user;
     const { asset } = await createAsset({ ...fields, ...fileData }, userId);
 
@@ -61,20 +59,19 @@ export async function assetsRoutes(app: FastifyInstance) {
     "/:assetId",
     { schema: { params: AssetByIdSchema } },
     async (request, reply) => {
-      const { name, file, type, description, collection_id } =
-        request.body as AssetUploadBody;
+      const data = await request.file();
 
       const assetData = AssetUpdateSchema.parse({
-        name,
-        type,
-        description,
-        collection_id,
+        name: getField(data, "name"),
+        type: getField(data, "type"),
+        description: getField(data, "description"),
+        collection_id: getField(data, "collection_id"),
       });
 
       let fileData: FileData | undefined;
 
-      if (file) {
-        fileData = await processFile(file);
+      if (data) {
+        fileData = await processFile(data);
       }
 
       const { userId } = request.user;
