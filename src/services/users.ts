@@ -4,6 +4,7 @@ import type {
   User,
   UserInsert,
   UserLogin,
+  UserUpdate,
 } from "../types/users.js";
 import { hash, verify } from "argon2";
 import { ConflictError, AppError, UnauthorizedError } from "../lib/errors.js";
@@ -78,4 +79,25 @@ export async function login({ email, password }: UserLogin) {
   const token = signToken({ userId: user.id });
 
   return { user: publicUser, token };
+}
+
+export async function getUserById(userId: string) {
+  try {
+    const { rows } = await pool.query<PublicUser>(
+      `SELECT id, name, email, avatar_url, created_at, updated_at
+       FROM users
+       WHERE id = $1;`,
+      [userId],
+    );
+
+    const user = rows[0];
+    if (!user) {
+      throw new NotFoundError("Usuário não encontrado");
+    }
+
+    return { user };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao retornar usuário.", 500);
+  }
 }
