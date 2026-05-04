@@ -5,7 +5,6 @@ import { UnauthorizedError } from "../lib/errors.js";
 
 export const authPlugin: FastifyPluginAsync = fastifyPlugin(async (app) => {
   app.addHook("onRequest", async (request) => {
-    console.log("eita");
     const PREFIX = "Bearer ";
     const header = request.headers.authorization;
 
