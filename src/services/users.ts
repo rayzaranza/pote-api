@@ -4,9 +4,15 @@ import type {
   User,
   UserInsert,
   UserLogin,
+  UserUpdate,
 } from "../types/users.js";
 import { hash, verify } from "argon2";
-import { ConflictError, AppError, UnauthorizedError } from "../lib/errors.js";
+import {
+  ConflictError,
+  AppError,
+  UnauthorizedError,
+  NotFoundError,
+} from "../lib/errors.js";
 import { DatabaseError } from "pg";
 import { signToken } from "../lib/jwt.js";
 
@@ -78,4 +84,68 @@ export async function login({ email, password }: UserLogin) {
   const token = signToken({ userId: user.id });
 
   return { user: publicUser, token };
+}
+
+export async function getUserById(userId: string) {
+  try {
+    const { rows } = await pool.query<PublicUser>(
+      `SELECT id, name, email, avatar_url, created_at, updated_at
+       FROM users
+       WHERE id = $1;`,
+      [userId],
+    );
+
+    const user = rows[0];
+    if (!user) {
+      throw new NotFoundError("Usuário não encontrado");
+    }
+
+    return { user };
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao retornar usuário.", 500);
+  }
+}
+
+export async function editUser(
+  { name, email, password, avatar_url }: UserUpdate,
+  userId: string,
+) {
+  let password_hash: string | undefined;
+  try {
+    if (password) {
+      password_hash = await hash(password);
+    }
+  } catch {
+    throw new AppError("Erro interno ao criptografar senha.", 500);
+  }
+
+  try {
+    const { rows } = await pool.query<PublicUser>(
+      `UPDATE users 
+       SET 
+          name = COALESCE($1, name),
+          email = COALESCE($2, email),
+          password_hash = COALESCE($3, password_hash),
+          avatar_url = COALESCE($4, avatar_url),
+          updated_at = now()
+       WHERE id = $5
+       RETURNING id, name, email, avatar_url, created_at, updated_at;`,
+      [name, email, password_hash, avatar_url, userId],
+    );
+
+    const user = rows[0];
+
+    if (!user) {
+      throw new NotFoundError("Nenhum usuário encontrado com esse id.");
+    }
+
+    return { user };
+  } catch (error) {
+    if (error instanceof DatabaseError && error.code === "23505") {
+      throw new ConflictError("Esse email já está sendo usado.");
+    }
+    if (error instanceof AppError) throw error;
+    throw new AppError("Erro interno ao editar usuário.", 500);
+  }
 }

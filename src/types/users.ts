@@ -26,3 +26,21 @@ export const UserLoginSchema = z.object({
 });
 
 export type UserLogin = z.infer<typeof UserLoginSchema>;
+
+export const UserUpdateSchema = z
+  .object({
+    name: z.string().min(2).optional(),
+    email: z.email().nullish(),
+    password: z.string().min(6).optional(),
+  })
+  .refine(
+    ({ name, email, password }) =>
+      name !== undefined || email !== undefined || password !== undefined,
+    {
+      message: "Pelo menos um campo deve ser fornecido.",
+    },
+  );
+
+export type UserUpdate = z.infer<typeof UserUpdateSchema> & {
+  avatar_url?: string | null;
+};
