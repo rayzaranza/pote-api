@@ -3,7 +3,7 @@ import { createUser, login } from "../services/users.js";
 import { UserInsertSchema, UserLoginSchema } from "../types/users.js";
 import { type ZodTypeProvider } from "@fastify/type-provider-zod";
 
-export async function usersRoute(app: FastifyInstance) {
+export async function usersRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   server.post(

@@ -14,7 +14,7 @@ import {
 } from "../types/collections.js";
 import { getAssets } from "../services/assets.js";
 
-export async function collectionRoutes(app: FastifyInstance) {
+export async function collectionsRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   server.get("/", async (request, reply) => {

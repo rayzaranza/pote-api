@@ -12,7 +12,6 @@ import {
   AssetByIdSchema,
   AssetInsertSchema,
   AssetUpdateSchema,
-  FileData,
 } from "../types/assets.js";
 import { processFile } from "../lib/upload.js";
 import { getField } from "../lib/multipart.js";
