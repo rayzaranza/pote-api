@@ -52,3 +52,17 @@ export const AssetUpdateSchema = z.object({
 });
 
 export type AssetUpdate = z.infer<typeof AssetUpdateSchema>;
+
+export const mimeTypeByFormat: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  glb: "model/gltf-binary",
+  gltf: "model/gltf+json",
+  pdf: "application/pdf",
+} as const;
