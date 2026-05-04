@@ -1,5 +1,6 @@
 import { pool } from "../database/pool.js";
 import { AppError, NotFoundError } from "../lib/errors.js";
+import { deleteFile } from "../lib/upload.js";
 import type {
   PublicAsset,
   AssetInsert,
@@ -22,6 +23,7 @@ export async function getAssets(userId: string, collectionId?: string) {
           height, 
           created_at,
           updated_at,
+          storage_id,
           collection_id
         FROM assets
         WHERE user_id = $1 AND ($2::uuid IS NULL OR collection_id = $2)
@@ -53,6 +55,7 @@ export async function getAssetById(assetId: string, userId: string) {
           height, 
           created_at,
           updated_at,
+          storage_id,
           collection_id
         FROM assets
         WHERE id = $1 AND user_id = $2`,
@@ -85,10 +88,11 @@ export async function createAsset(asset: AssetInsert, userId: string) {
           size, 
           width, 
           height, 
+          storage_id,
           collection_id, 
           user_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING 
           id,
           name, 
@@ -101,6 +105,7 @@ export async function createAsset(asset: AssetInsert, userId: string) {
           height, 
           created_at,
           updated_at,
+          storage_id,
           collection_id;`,
       [
         asset.name,
@@ -111,6 +116,7 @@ export async function createAsset(asset: AssetInsert, userId: string) {
         asset.size,
         asset.width,
         asset.height,
+        asset.storage_id,
         asset.collection_id,
         userId,
       ],
@@ -131,13 +137,16 @@ export async function editAsset(
   {
     assetData,
     fileData,
-  }: { assetData: AssetUpdate; fileData?: FileData | undefined },
+  }: { assetData?: AssetUpdate | undefined; fileData?: FileData | undefined },
   assetId: string,
   userId: string,
 ) {
   try {
     const { rows } = await pool.query(
-      `UPDATE assets
+      `WITH old AS (
+         SELECT storage_id FROM assets WHERE id = $11 AND user_id = $12
+       )
+       UPDATE assets
        SET
           name = COALESCE($1, name), 
           description = COALESCE($2, description), 
@@ -147,10 +156,11 @@ export async function editAsset(
           size = COALESCE($6, size),  
           width = COALESCE($7, width), 
           height = COALESCE($8, height), 
-          collection_id = COALESCE($9, collection_id),
+          storage_id = COALESCE($9, storage_id),
+          collection_id = COALESCE($10, collection_id),
           updated_at = now()
         WHERE
-          id = $10 AND user_id = $11
+          id = $11 AND user_id = $12
         RETURNING 
           id,
           name, 
@@ -163,17 +173,20 @@ export async function editAsset(
           height, 
           created_at,
           updated_at,
-          collection_id;`,
+          storage_id,
+          collection_id,
+          (SELECT storage_id FROM old) as old_storage_id;`,
       [
-        assetData.name,
-        assetData.description,
+        assetData?.name,
+        assetData?.description,
         fileData?.url,
-        assetData.type,
+        assetData?.type,
         fileData?.mime_type,
         fileData?.size,
         fileData?.width,
         fileData?.height,
-        assetData.collection_id,
+        fileData?.storage_id,
+        assetData?.collection_id,
         assetId,
         userId,
       ],
@@ -185,6 +198,10 @@ export async function editAsset(
       throw new NotFoundError("Nenhum arquivo encontrado com esse id.");
     }
 
+    if (fileData) {
+      await deleteFile(asset.old_storage_id);
+    }
+
     return { asset: { ...asset, size: Number(asset.size) } };
   } catch (error) {
     if (error instanceof AppError) throw error;
@@ -194,15 +211,20 @@ export async function editAsset(
 
 export async function deleteAsset(assetId: string, userId: string) {
   try {
-    const { rowCount } = await pool.query(
+    const { rows } = await pool.query<PublicAsset>(
       `DELETE FROM assets 
-       WHERE id = $1 AND user_id = $2;`,
+       WHERE id = $1 AND user_id = $2
+       RETURNING storage_id;`,
       [assetId, userId],
     );
 
-    if (rowCount === 0) {
+    const deletedAsset = rows[0];
+
+    if (!deletedAsset) {
       throw new NotFoundError("Nenhum arquivo encontrado com esse id.");
     }
+
+    await deleteFile(deletedAsset.storage_id);
   } catch (error) {
     if (error instanceof AppError) throw error;
     throw new AppError("Erro interno ao excluir arquivo.", 500);

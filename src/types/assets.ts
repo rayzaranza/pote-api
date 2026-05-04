@@ -15,6 +15,7 @@ export interface FileData {
   url: string;
   size: number;
   mime_type: string;
+  storage_id: string;
   width: number | null;
   height: number | null;
 }
@@ -65,4 +66,14 @@ export const mimeTypeByFormat: Record<string, string> = {
   glb: "model/gltf-binary",
   gltf: "model/gltf+json",
   pdf: "application/pdf",
-} as const;
+};
+
+export const cloudinaryResourceType: Record<
+  AssetType,
+  "image" | "video" | "raw"
+> = {
+  image: "image",
+  "3d": "raw",
+  document: "raw",
+  video: "video",
+};
