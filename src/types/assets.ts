@@ -15,6 +15,7 @@ export interface FileData {
   url: string;
   size: number;
   mime_type: string;
+  storage_id: string;
   width: number | null;
   height: number | null;
 }
@@ -52,3 +53,27 @@ export const AssetUpdateSchema = z.object({
 });
 
 export type AssetUpdate = z.infer<typeof AssetUpdateSchema>;
+
+export const mimeTypeByFormat: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  gif: "image/gif",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  glb: "model/gltf-binary",
+  gltf: "model/gltf+json",
+  pdf: "application/pdf",
+};
+
+export const cloudinaryResourceType: Record<
+  AssetType,
+  "image" | "video" | "raw"
+> = {
+  image: "image",
+  "3d": "raw",
+  document: "raw",
+  video: "video",
+};
