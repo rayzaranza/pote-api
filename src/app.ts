@@ -44,4 +44,8 @@ app.setErrorHandler((error: FastifyError, _request, reply) => {
   reply.code(500).send({ error: "Error interno de servidor." });
 });
 
+app.get("/api/health", async (_request, reply) => {
+  reply.send({ status: "ok" });
+});
+
 app.register(routes, { prefix: "/api" });
