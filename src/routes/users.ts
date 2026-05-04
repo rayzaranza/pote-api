@@ -2,6 +2,8 @@ import { type FastifyInstance } from "fastify";
 import { editUser, getUserById } from "../services/users.js";
 import { type ZodTypeProvider } from "@fastify/type-provider-zod";
 import { UserUpdateSchema } from "../types/users.js";
+import { processFile } from "../lib/upload.js";
+import { ValidationError } from "../lib/errors.js";
 
 export async function usersRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -23,13 +25,14 @@ export async function usersRoutes(app: FastifyInstance) {
     },
   );
 
-  server.post(
-    "/login",
-    { schema: { body: UserLoginSchema } },
-    async (request, reply) => {
-      const { email, password } = request.body;
-      const { user, token } = await login({ email, password });
-      reply.code(200).send({ user, token });
-    },
-  );
+  server.put("/me/avatar", async (request, reply) => {
+    const file = await request.file();
+    if (!file) {
+      throw new ValidationError("Nenhuma imagem enviada.");
+    }
+    const { url } = await processFile(file, "image");
+    const { userId } = request.user;
+    const { user } = await editUser({ avatar_url: url }, userId);
+    reply.send({ user });
+  });
 }
